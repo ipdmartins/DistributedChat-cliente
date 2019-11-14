@@ -43,11 +43,12 @@ public class ClienteControl {
 	private int selectedCol;
 	private int tabuleiroRow;
 	private int tabuleiroCol;
+	private List<Observador> observadores;
 
 	private static ClienteControl instance;
 
 	private ClienteControl() {
-		this.tabuleiroRow = 4;
+		this.tabuleiroRow = 10;
 		this.tabuleiroCol = 4;
 		this.cliente = new Cliente();
 		this.cliente.setEmail(null);
@@ -57,6 +58,16 @@ public class ClienteControl {
 		this.serverCliente = null;
 		this.socketCliente = null;
 		this.chatTabuleiro = new String[tabuleiroRow][tabuleiroCol];
+		this.observadores = new ArrayList<>();
+		initTable();
+	}
+	
+	public void initTable() {
+		for (int i = 0; i < tabuleiroRow; i++) {
+			for (int j = 0; j < tabuleiroCol; j++) {
+				chatTabuleiro[i][j] = " - ";
+			}
+		}
 	}
 
 	public synchronized static ClienteControl getInstance() {
@@ -75,12 +86,11 @@ public class ClienteControl {
 			if (socketCliente != null) {
 				streamClient = new StreamClient();
 				streamClient.createStream(socketCliente);
-
 			} else {
 				System.out.println("CONEXÃO NÃO EFETUADA");
 			}
 		} catch (IOException e) {
-			System.err.println("ERRO NA CONEXAO " + e);
+			System.err.println("ERRO NA CONEXAO connect() cliente " + e);
 		}
 	}
 
@@ -96,23 +106,23 @@ public class ClienteControl {
 		this.cliente.setPortaServer(Integer.parseInt(serverPort));
 		this.cliente.setIpServer(serverIP);
 		this.cliente.setStatus("null");
-
 		this.answer = gson.toJson(cliente);
-		System.out.println(answer);
 		if (serverCliente == null || socketCliente == null) {
 			connect();
 		}
 		// answer ja é uma uma String Json com todos os atributos de cliente.
 		answer = addresser("A", answer);
-
-		listManager(1);
-
+		if(answer.equalsIgnoreCase("stored")) {
+			listManager(1);
+		}
 		return answer;
-		// return "ok";
 	}
 
 	public String login(String email, String pass) {
 		answer = email + "," + pass;
+		if (serverCliente == null || socketCliente == null) {
+			connect();
+		}
 		answer = addresser("B", answer);
 		if(answer.equalsIgnoreCase("Welcome")) {
 			listManager(2);
@@ -125,8 +135,25 @@ public class ClienteControl {
 			selectedCol = 2;
 		}
 		answer = chatTabuleiro[selectedRow][selectedCol];
-
-		return addresser("D", answer);
+		String add = cliente.getEmail() + "," + answer;
+		add = addresser("D", add);
+		if(add.equalsIgnoreCase("added")) {
+			listManager(2);
+		}
+		return add;
+	}
+	
+	public String removeContact(String email) {
+		if (selectedCol == 0 || selectedCol == 1) {
+			selectedCol = 2;
+		}
+		answer = chatTabuleiro[selectedRow][selectedCol];
+		String remove = cliente.getEmail() + "," + answer;
+		remove = addresser("E", remove);
+		if(remove.equalsIgnoreCase("removed")) {
+			listManager(2);
+		}
+		return remove;
 	}
 
 	public void listManager(int option) {
@@ -135,12 +162,9 @@ public class ClienteControl {
 			Type tipoLista = new TypeToken<ArrayList<Cliente>>() {
 			}.getType();
 			listaClintes = gson.fromJson(jsonLista, tipoLista);
-			if (option == 1) {
-				tabuleiroRow = listaClintes.size();
-			}
-
+//			System.out.println("listManager cliente após converter "+listaClintes);
+//			System.out.println(listaClintes.get(0).getEmail());
 			for (int i = 0; i < tabuleiroRow; i++) {
-
 				if (option == 1) {
 					chatTabuleiro[i][0] = listaClintes.get(i).getStatus();
 					chatTabuleiro[i][1] = listaClintes.get(i).getNome();
@@ -152,37 +176,24 @@ public class ClienteControl {
 						chatTabuleiro[i][3] = "NO";
 					}
 				}
-
 			}
-
+			notificarMudancaTabuleiro();
 		} catch (IOException e) {
 			System.err.println("ERRO AO RECEBER LISTA GSON DO SERVER " + e);
 		}
-
-	}
-
-	public String removeContact(String email) {
-		if (selectedCol == 0 || selectedCol == 1) {
-			selectedCol = 2;
-		}
-		answer = chatTabuleiro[selectedRow][selectedCol];
-
-		return addresser("E", answer);
 	}
 
 	public void notifylive() {
 		try {
-			sleep(5000);
+			sleep(40000);
 			answer = cliente.getEmail();
 			addresser("F", answer);
-
 		} catch (InterruptedException e) {
 			System.err.println("ERRO ENVIO GSON REGISTRO" + e);
 		}
 	}
 	
 	public String logout() {
-
 		answer = "logout";
 		answer = addresser("C", answer);
 
@@ -203,7 +214,6 @@ public class ClienteControl {
 			streamClient.sendMessage(req);
 			streamClient.sendMessage(response);// response é o Json sendo enviado
 			this.answer = streamClient.readMessage();
-
 		} catch (IOException e) {
 			System.err.println("ERRO ENVIO GSON REGISTRO" + e);
 		}
@@ -227,9 +237,23 @@ public class ClienteControl {
 		return (chatTabuleiro[row][col] == null ? null : chatTabuleiro[row][col]);
 	}
 
-	public void pegarIndexTabuleiro(int selectedRow, int selectedColumn) {
-		selectedRow = selectedRow;
+	public void pegarIndexTabuleiro(int selectionRow, int selectedColumn) {
+		selectedRow = selectionRow;
 		selectedCol = selectedColumn;
 	}
+	
+    public void notificarMudancaTabuleiro() {
+        for (Observador obs : observadores) {
+            obs.mudouTabuleiro();
+        }
+    }
+       
+    public void removeObservador(Observador obs) {
+        observadores.remove(obs);
+    }
+ 
+    public void addObservador(Observador obs) {
+        observadores.add(obs);
+    }
 
 }
