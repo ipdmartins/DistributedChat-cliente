@@ -110,7 +110,7 @@ public class ClienteControl {
 		this.cliente.setIpServer(serverIP);
 		this.cliente.setStatus("null");
 		this.answer = gson.toJson(cliente);
-		if (serverCliente == null || socketCliente == null) {
+		if (serverCliente == null || socketCliente == null || socketCliente.isClosed()) {
 			connect();
 		}
 		// answer ja é uma uma String Json com todos os atributos de cliente.
@@ -119,7 +119,7 @@ public class ClienteControl {
 	}
 
 	public boolean validatePass(String text) {
-		if (serverCliente == null || socketCliente == null) {
+		if (serverCliente == null || socketCliente == null || socketCliente.isClosed()) {
 			connect();
 		}
 		answer = cliente.getEmail() + "," + text;
@@ -132,7 +132,7 @@ public class ClienteControl {
 
 	public List login(String email, String pass) {
 		answer = email + "," + pass;
-		if (serverCliente == null || socketCliente == null) {
+		if (serverCliente == null || socketCliente == null || socketCliente.isClosed()) {
 			connect();
 		}
 		answer = addresser("B", answer);
@@ -201,8 +201,8 @@ public class ClienteControl {
 	}
 
 	public String logout() {
-		answer = "logout";
-		answer = addresser("C", answer);
+		
+		answer = addresser("C", cliente.getEmail());
 
 		if (answer.equalsIgnoreCase("logged out")) {
 			if (!socketCliente.isClosed()) {

@@ -368,6 +368,7 @@ public class ClientScreen extends JFrame implements Observador {
 	
 	private void enablePanel(int cond) {
 		if(cond == 0) {
+			jtxtMyIP.setEnabled(false);
 			jtxtName.setEnabled(false);
 			jtxtBirth.setEnabled(false);
 			jtxtMyPort.setEnabled(false);
@@ -381,6 +382,7 @@ public class ClientScreen extends JFrame implements Observador {
 			jtxtMyPort.setEnabled(true);
 			jbSave.setEnabled(true);
 			jbActualize.setEnabled(false);
+			jtxtMyIP.setEnabled(true);
 		}
 	}
 
