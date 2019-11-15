@@ -1,5 +1,7 @@
 package model;
 
+import java.util.List;
+
 public class Cliente {
 
 	private String nome;
@@ -11,7 +13,25 @@ public class Cliente {
 	private int portaServer;
 	private String ipServer;
 	private String status;
+	private List<Cliente> myContacts;
+	private Cliente cliente;
 	
+	public Cliente getCliente() {
+		return cliente;
+	}
+
+	public void setCliente(Cliente cliente) {
+		this.cliente = cliente;
+	}
+
+	public List<Cliente> getMyContacts() {
+		return myContacts;
+	}
+
+	public void setMyContacts(List<Cliente> myContacts) {
+		this.myContacts = myContacts;
+	}
+
 	public int getPortaServer() {
 		return portaServer;
 	}
@@ -83,6 +103,12 @@ public class Cliente {
 	public void setPortaCliente(int portaCliente) {
 		this.portaCliente = portaCliente;
 	}
-	
 
+	@Override
+	public String toString() {
+		return "Cliente [nome=" + nome + ", email=" + email + ", senha=" + senha + ", anoNasc=" + anoNasc
+				+ ", portaCliente=" + portaCliente + ", ipCliente=" + ipCliente + ", portaServer=" + portaServer
+				+ ", ipServer=" + ipServer + ", status=" + status + "]";
+	}
+	
 }

@@ -17,6 +17,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import com.google.gson.Gson;
@@ -43,6 +44,8 @@ public class ClienteControl {
 	private int selectedCol;
 	private int tabuleiroRow;
 	private int tabuleiroCol;
+	private int serverPort;
+	private String serverIP;
 	private List<Observador> observadores;
 
 	private static ClienteControl instance;
@@ -59,9 +62,11 @@ public class ClienteControl {
 		this.socketCliente = null;
 		this.chatTabuleiro = new String[tabuleiroRow][tabuleiroCol];
 		this.observadores = new ArrayList<>();
+		this.serverPort = 56003;
+		this.serverIP = "192.168.2.171";
 		initTable();
 	}
-	
+
 	public void initTable() {
 		for (int i = 0; i < tabuleiroRow; i++) {
 			for (int j = 0; j < tabuleiroCol; j++) {
@@ -81,8 +86,7 @@ public class ClienteControl {
 		try {
 			serverCliente = new ServerSocket(cliente.getPortaCliente());
 			serverCliente.setReuseAddress(true);
-
-			socketCliente = new Socket(cliente.getIpServer(), cliente.getPortaServer());
+			socketCliente = new Socket(serverIP, serverPort);
 			if (socketCliente != null) {
 				streamClient = new StreamClient();
 				streamClient.createStream(socketCliente);
@@ -94,16 +98,15 @@ public class ClienteControl {
 		}
 	}
 
-	public String register(String nome, String email, String nasc, String pass, String porta, String ipCliente,
-			String serverPort, String serverIP) {
+	public String register(String nome, String email, String nasc, String pass, String porta, String myIP) {
 		// cadastro inicial do cliente no server
 		this.cliente.setNome(nome);
 		this.cliente.setEmail(email);
 		this.cliente.setAnoNasc(nasc);
 		this.cliente.setSenha(pass);
 		this.cliente.setPortaCliente(Integer.parseInt(porta));
-		this.cliente.setIpCliente(ipCliente);
-		this.cliente.setPortaServer(Integer.parseInt(serverPort));
+		this.cliente.setIpCliente(myIP);
+		this.cliente.setPortaServer(serverPort);
 		this.cliente.setIpServer(serverIP);
 		this.cliente.setStatus("null");
 		this.answer = gson.toJson(cliente);
@@ -112,75 +115,79 @@ public class ClienteControl {
 		}
 		// answer ja é uma uma String Json com todos os atributos de cliente.
 		answer = addresser("A", answer);
-		if(answer.equalsIgnoreCase("stored")) {
-			listManager(1);
-		}
 		return answer;
 	}
 
-	public String login(String email, String pass) {
+	public boolean validatePass(String text) {
+		if (serverCliente == null || socketCliente == null) {
+			connect();
+		}
+		answer = cliente.getEmail() + "," + text;
+		answer = addresser("G", answer);
+		if (answer.equalsIgnoreCase("Granted")) {
+			return true;
+		}
+		return false;
+	}
+
+	public List login(String email, String pass) {
 		answer = email + "," + pass;
 		if (serverCliente == null || socketCliente == null) {
 			connect();
 		}
 		answer = addresser("B", answer);
-		if(answer.equalsIgnoreCase("Welcome")) {
-			listManager(2);
+		if (answer.equalsIgnoreCase("Welcome")) {
+			if(listManager(2) == null) {
+				return listManager(1);
+			}
 		}
-		return answer;
+		return null;
 	}
 
-	public String addContact(String email) {
-		if (selectedCol == 0 || selectedCol == 1) {
-			selectedCol = 2;
-		}
-		answer = chatTabuleiro[selectedRow][selectedCol];
-		String add = cliente.getEmail() + "," + answer;
+	public List addContact(String email) {
+
+		String add = cliente.getEmail() + "," + email;
+		System.out.println("cli add: "+add);
 		add = addresser("D", add);
-		if(add.equalsIgnoreCase("added")) {
-			listManager(2);
+		if (add.equalsIgnoreCase("added")) {
+			return listManager(1);
 		}
-		return add;
+		return null;
 	}
-	
-	public String removeContact(String email) {
-		if (selectedCol == 0 || selectedCol == 1) {
-			selectedCol = 2;
-		}
-		answer = chatTabuleiro[selectedRow][selectedCol];
-		String remove = cliente.getEmail() + "," + answer;
+
+	public List removeContact(int index) {
+		String remove = cliente.getEmail() + "," + cliente.getMyContacts().get(index).getEmail();
 		remove = addresser("E", remove);
 		if(remove.equalsIgnoreCase("removed")) {
-			listManager(2);
+			return listManager(1);
 		}
-		return remove;
+		return null;
 	}
 
-	public void listManager(int option) {
+	public List listManager(int option) {
+		List<String> contatos = null;
 		try {
-			String jsonLista = streamClient.readMessage();
-			Type tipoLista = new TypeToken<ArrayList<Cliente>>() {
-			}.getType();
-			listaClintes = gson.fromJson(jsonLista, tipoLista);
-//			System.out.println("listManager cliente após converter "+listaClintes);
-//			System.out.println(listaClintes.get(0).getEmail());
-			for (int i = 0; i < tabuleiroRow; i++) {
-				if (option == 1) {
-					chatTabuleiro[i][0] = listaClintes.get(i).getStatus();
-					chatTabuleiro[i][1] = listaClintes.get(i).getNome();
-					chatTabuleiro[i][2] = listaClintes.get(i).getEmail();
-				} else if (option == 2) {
-					if (chatTabuleiro[i][2].equalsIgnoreCase(listaClintes.get(i).getEmail())) {
-						chatTabuleiro[i][3] = "YES";
-					}else {
-						chatTabuleiro[i][3] = "NO";
-					}
+			if (option == 1) {
+				String jsonLista = streamClient.readMessage();
+				Type tipoLista = new TypeToken<ArrayList<Cliente>>() {
+				}.getType();
+				listaClintes = gson.fromJson(jsonLista, tipoLista);
+				cliente.setMyContacts(listaClintes);
+				contatos = new ArrayList<String>();
+				for (int i = 0; i < listaClintes.size(); i++) {
+					contatos.add(listaClintes.get(i).getStatus() + " - " + listaClintes.get(i).getNome() + 
+							" - " + listaClintes.get(i).getEmail() + " - Porta: " + 
+							listaClintes.get(i).getPortaCliente() + " - IP: " + listaClintes.get(i).getIpCliente());
 				}
+			}else if (option == 2) {
+				String cliente = streamClient.readMessage();
+				this.cliente = gson.fromJson(cliente, Cliente.class);
+				System.out.println(this.cliente.getEmail());
 			}
-			notificarMudancaTabuleiro();
 		} catch (IOException e) {
 			System.err.println("ERRO AO RECEBER LISTA GSON DO SERVER " + e);
 		}
+		return contatos;
 	}
 
 	public void notifylive() {
@@ -192,7 +199,7 @@ public class ClienteControl {
 			System.err.println("ERRO ENVIO GSON REGISTRO" + e);
 		}
 	}
-	
+
 	public String logout() {
 		answer = "logout";
 		answer = addresser("C", answer);
@@ -241,19 +248,19 @@ public class ClienteControl {
 		selectedRow = selectionRow;
 		selectedCol = selectedColumn;
 	}
-	
-    public void notificarMudancaTabuleiro() {
-        for (Observador obs : observadores) {
-            obs.mudouTabuleiro();
-        }
-    }
-       
-    public void removeObservador(Observador obs) {
-        observadores.remove(obs);
-    }
- 
-    public void addObservador(Observador obs) {
-        observadores.add(obs);
-    }
+
+	public void notificarMudancaTabuleiro() {
+		for (Observador obs : observadores) {
+			obs.mudouTabuleiro();
+		}
+	}
+
+	public void removeObservador(Observador obs) {
+		observadores.remove(obs);
+	}
+
+	public void addObservador(Observador obs) {
+		observadores.add(obs);
+	}
 
 }
