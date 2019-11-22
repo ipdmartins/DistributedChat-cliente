@@ -19,12 +19,14 @@ public class ConnectionManager extends Thread {
 	private ServerSocket serverCliente;
 	private RequestManager requestManager;
 
+
 //    private StreamClient streamClient;
 //    private String res;
 //    private int idStream;
 
-	public ConnectionManager(ServerSocket server, ClienteControl clienteControl) {
+	public ConnectionManager(ServerSocket server) {
 		this.serverCliente = server;
+
 	}
 
 	@Override

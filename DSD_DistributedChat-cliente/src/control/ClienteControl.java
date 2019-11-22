@@ -17,6 +17,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -48,6 +49,7 @@ public class ClienteControl {
 	private List<Observador> observadores;
 	private ConnectionManager connectionManager;
 	private ClientScreen screen;
+	private HashMap<String, Integer> modelChatMap;
 
 	private static ClienteControl instance;
 
@@ -61,8 +63,9 @@ public class ClienteControl {
 		this.socketCliente = null;
 		this.observadores = new ArrayList<>();
 		this.serverPort = 56003;
-		this.serverIP = "10.60.92.90";
+		this.serverIP = "10.60.185.183";
 		this.listStreams = new ArrayList<StreamClient>();
+		this.modelChatMap = new HashMap<String, Integer>();
 	}
 
 	public synchronized static ClienteControl getInstance() {
@@ -94,7 +97,7 @@ public class ClienteControl {
 		try {
 			this.serverCliente = new ServerSocket(cliente.getPortaCliente());
 			this.serverCliente.setReuseAddress(true);
-			this.connectionManager = new ConnectionManager(serverCliente, this);
+			this.connectionManager = new ConnectionManager(serverCliente);
 			this.connectionManager.start();
 		} catch (IOException e) {
 			System.err.println("ERRO no cliente setServer() " + e);
@@ -171,7 +174,7 @@ public class ClienteControl {
 		return cliente.getMyContacts().get(index).getNome();
 	}
 
-	public void sendMessage(String message, int index) {
+	public void sendMessage(String message, int index, int indexModelChat) {
 		String ip = cliente.getMyContacts().get(index).getIpCliente();
 		int porta = cliente.getMyContacts().get(index).getPortaCliente();
 
@@ -181,13 +184,14 @@ public class ClienteControl {
 				StreamClient streamContact = new StreamClient();
 				streamContact.createStream(socketCliente);
 				streamContact.sendMessage(message);
+				modelChatMap.put(ip, indexModelChat);
 				streamContact.closeStream();
 				socketContato.close();
 			} else {
-				System.err.println("ERRO CONEXÃO sendMessage() AO CLIENTE");
+				System.err.println("ERRO CONEXÃO sendMessage() AO CLIENTE ");
 			}
 		} catch (IOException e) {
-			System.err.println("ERRO NO CLIENTE sendMessage() AO CLIENTE" + e);
+			System.err.println("ERRO NO CLIENTE sendMessage() AO CLIENTE " + e);
 		}
 	}
 
@@ -196,13 +200,18 @@ public class ClienteControl {
 		if (ip.contains("/")) {
 			ip = ip.replace("/", "");
 		}
-		for (int i = 0; i < cliente.getMyContacts().size(); i++) {
-			if (cliente.getMyContacts().get(i).getIpCliente().equalsIgnoreCase(ip)) {
-				this.screen.chatFeed(i, res);
-				break;
+		if (modelChatMap.containsValue(ip)) {
+			// DEVE RETORNAR O INTEGER DO HASHMAP
+			this.screen.chatFeed(modelChatMap.get(ip), res);
+			System.out.println("valor int do hashmap " + modelChatMap.get(ip));
+		} else {
+			for (int i = 0; i < cliente.getMyContacts().size(); i++) {
+				if (cliente.getMyContacts().get(i).getIpCliente().equalsIgnoreCase(ip)) {
+					this.screen.panelChat(res, i);
+					break;
+				}
 			}
 		}
-
 	}
 
 	public List listManager(int option) {
