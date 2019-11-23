@@ -62,8 +62,8 @@ public class ClienteControl {
 		this.serverCliente = null;
 		this.socketCliente = null;
 		this.observadores = new ArrayList<>();
-		this.serverPort = 56003;
-		this.serverIP = "10.60.185.183";
+		this.serverPort = 56005;
+		this.serverIP = "192.168.2.171";
 		this.listStreams = new ArrayList<StreamClient>();
 		this.modelChatMap = new HashMap<String, Integer>();
 	}
@@ -82,6 +82,8 @@ public class ClienteControl {
 			if (socketCliente != null) {
 				streamClient = new StreamClient();
 				streamClient.createStream(socketCliente);
+				RequestManager requestManager = new RequestManager(socketCliente, true);
+//				requestManager.start();
 			} else {
 				System.out.println("CONEXÃO NÃO EFETUADA");
 				return false;
@@ -94,14 +96,8 @@ public class ClienteControl {
 	}
 
 	public void setServer() {
-		try {
-			this.serverCliente = new ServerSocket(cliente.getPortaCliente());
-			this.serverCliente.setReuseAddress(true);
-			this.connectionManager = new ConnectionManager(serverCliente);
-			this.connectionManager.start();
-		} catch (IOException e) {
-			System.err.println("ERRO no cliente setServer() " + e);
-		}
+		this.connectionManager = new ConnectionManager(cliente.getPortaCliente());
+		this.connectionManager.start();
 	}
 
 	public String register(String nome, String email, String nasc, String pass) {
@@ -174,17 +170,18 @@ public class ClienteControl {
 		return cliente.getMyContacts().get(index).getNome();
 	}
 
-	public void sendMessage(String message, int index, int indexModelChat) {
+	public void sendMessage(String message, int index, int indexListaLabelChat) {
 		String ip = cliente.getMyContacts().get(index).getIpCliente();
 		int porta = cliente.getMyContacts().get(index).getPortaCliente();
-
+		System.out.println("ip: "+ip+" porta: "+porta);
 		try {
 			Socket socketContato = new Socket(ip, porta);
 			if (socketContato != null) {
 				StreamClient streamContact = new StreamClient();
-				streamContact.createStream(socketCliente);
+				streamContact.createStream(socketContato);
 				streamContact.sendMessage(message);
-				modelChatMap.put(ip, indexModelChat);
+				System.out.println("DEU BOA A MSG");
+				modelChatMap.put(ip, indexListaLabelChat);
 				streamContact.closeStream();
 				socketContato.close();
 			} else {
@@ -196,10 +193,12 @@ public class ClienteControl {
 	}
 
 	public void contactMessage(String res, Socket socket) {
+		System.out.println("chegou "+res);
 		String ip = socket.getInetAddress().toString();
 		if (ip.contains("/")) {
 			ip = ip.replace("/", "");
 		}
+		System.out.println("ip aqui: "+ip);
 		if (modelChatMap.containsValue(ip)) {
 			// DEVE RETORNAR O INTEGER DO HASHMAP
 			this.screen.chatFeed(modelChatMap.get(ip), res);
@@ -207,7 +206,7 @@ public class ClienteControl {
 		} else {
 			for (int i = 0; i < cliente.getMyContacts().size(); i++) {
 				if (cliente.getMyContacts().get(i).getIpCliente().equalsIgnoreCase(ip)) {
-					this.screen.panelChat(res, i);
+					this.screen.panelChat(cliente.getMyContacts().get(i).getNome(), i, res);
 					break;
 				}
 			}

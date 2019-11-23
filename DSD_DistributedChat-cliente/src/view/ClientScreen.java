@@ -41,7 +41,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import control.ClienteControl;
 import control.Observador;
 
-public class ClientScreen extends JFrame implements Observador {
+public class ClientScreen extends JFrame {
 
 	// PAINEL PRINCIPAL
 	private JFrame frameNewContact;
@@ -63,7 +63,7 @@ public class ClientScreen extends JFrame implements Observador {
 	private DefaultListModel model;
 	private JList list;
 
-		// PAINEL LOGIN
+	// PAINEL LOGIN
 	private JFrame frameLogin;
 	private JPanel panelMyLogin;
 	private JLabel jlEmailLogin;
@@ -95,7 +95,7 @@ public class ClientScreen extends JFrame implements Observador {
 	private JFrame frameChat;
 	private JLabel jlnomeContato;
 	private JPanel panelChatClient;
-	
+
 	private JPanel panelContact;
 	private JPanel panelText;
 
@@ -104,14 +104,18 @@ public class ClientScreen extends JFrame implements Observador {
 	private JTextField jtxtChatTextSender;
 	private JButton jbSend;
 	private JButton jbFile;
-	private DefaultListModel modelChat;
-	private JList jListChat;
-	private List<DefaultListModel> listaModelChats;
+	private List<JLabel> listaLabelChats;
+	private List<JButton> listaBtnTexts;
+	private List<JButton> listaBtnFiles;
+	private List<JTextField> listaJtxtFields;
+	private List<JPanel> listaPanel;
 	private JFileChooser file;
-	private String wordSender;
+	String wordSender;
+
+	private int counter1;
+	private int counter2;
 
 	private JOptionPane optionPane;
-	private JTable chatPrincipal;
 
 	private ClienteControl clienteControl;
 
@@ -129,12 +133,17 @@ public class ClientScreen extends JFrame implements Observador {
 
 		clienteControl = ClienteControl.getInstance();
 		clienteControl.setScreen(this);
-		clienteControl.addObservador(this);
 		optionPane = new JOptionPane();
 		model = new DefaultListModel();
 		list = new JList(model);
-		listaModelChats = new ArrayList<DefaultListModel>();
+		listaLabelChats = new ArrayList<JLabel>();
+		listaBtnTexts = new ArrayList<JButton>();
+		listaBtnFiles = new ArrayList<JButton>();
+		listaJtxtFields = new ArrayList<JTextField>();
+		listaPanel = new ArrayList<JPanel>();
 		file = new JFileChooser();
+		counter1 = 0;
+		counter2 = 0;
 
 		// LABELS
 		jlValidatePass = new JLabel("Digite sua senha");
@@ -154,10 +163,8 @@ public class ClientScreen extends JFrame implements Observador {
 		jbLogout = new JButton("Logout");
 		jbMyAccount = new JButton("Register");
 		jbSave = new JButton("Save");
-		jbSend = new JButton("Send text");
 		jbStartChat = new JButton("Start chat");
 		jbRemove = new JButton("Remove Contact");
-		jbFile = new JButton("Send file");
 		jbActualize = new JButton("Edit");
 		jbValidatePass = new JButton("Validate");
 		jbNewContact = new JButton("Add");
@@ -171,7 +178,6 @@ public class ClientScreen extends JFrame implements Observador {
 		jtxtName = new JTextField();
 		jtxtPassword = new JTextField();
 		jtxtPasswordAccount = new JTextField();
-		jtxtChatTextSender = new JTextField();
 		JtxtNewContact = new JTextField();
 
 		// PANES E FRAMES
@@ -187,7 +193,7 @@ public class ClientScreen extends JFrame implements Observador {
 
 		panelMyLogin();
 		frameLogin.add(panelMyLogin);
-		
+
 //		frameChat.add(panelChatClient, BorderLayout.CENTER);
 
 	}
@@ -212,7 +218,7 @@ public class ClientScreen extends JFrame implements Observador {
 			public void actionPerformed(ActionEvent e) {
 				String s = clienteControl.logout();
 				optionPane.showMessageDialog(null, s);
-				//FALTA MODEL.CLEAR
+				// FALTA MODEL.CLEAR
 			}
 		});
 
@@ -246,8 +252,8 @@ public class ClientScreen extends JFrame implements Observador {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				String res = clienteControl.startChat(list.getSelectedIndex());
-				
-				panelChat(res, list.getSelectedIndex());
+
+				panelChat(res, list.getSelectedIndex(), "");
 			}
 		});
 
@@ -297,6 +303,107 @@ public class ClientScreen extends JFrame implements Observador {
 				}
 			}
 		});
+	}
+
+	public void panelChat(String nome, int indexJList, String message) {
+		frameChat = new JFrame();
+		frameChat.setTitle("CHAT");
+		frameChat.setSize(450, 550);
+		frameChat.setResizable(false);
+		frameChat.setLocationRelativeTo(null);
+		frameChat.setVisible(true);
+
+		panelChatClient = new JPanel(new BorderLayout());
+		listaPanel.add(panelChatClient);
+
+		jlnomeContato = new JLabel(nome);
+		panelChatClient.add(jlnomeContato, BorderLayout.NORTH);
+
+//		JPanel painel = new JPanel();
+		JLabel jlChat;
+		if(!message.equalsIgnoreCase("")) {
+			jlChat = new JLabel(nome +": "+ message+" ");
+		}else {
+			jlChat = new JLabel();
+		}
+		listaLabelChats.add(jlChat);
+//		painel.add(listaLabelChats.get(listaLabelChats.size()-1));
+//		System.out.println(listaLabelChats.size());
+		panelChatClient.add(listaLabelChats.get(listaLabelChats.size()-1), BorderLayout.CENTER);
+//		JScrollPane jscroll = new JScrollPane(painel);
+
+			
+		jbSend = new JButton("Send text");
+		jbFile = new JButton("Send file");
+		jbSend.setMnemonic(counter1);
+		jbFile.setMnemonic(counter2);
+//		System.out.println(jbSend.getMnemonic());
+//		System.out.println(jbFile.getMnemonic());
+		listaBtnTexts.add(jbSend);
+		listaBtnTexts.add(jbFile);
+
+		panelText = new JPanel(new GridLayout(2, 1));
+		this.jtxtChatTextSender = new JTextField();
+		listaJtxtFields.add(this.jtxtChatTextSender);
+		panelText.add(jtxtChatTextSender);
+		panelChatButtons = new JPanel();
+		panelChatButtons.setLayout(new FlowLayout());
+		panelChatButtons.add(jbSend);
+		panelChatButtons.add(jbFile);
+		panelText.add(panelChatButtons);
+
+		panelChatClient.add(panelText, BorderLayout.SOUTH);
+		String count1 = String.valueOf(counter1);
+		String count2 = String.valueOf(counter2);
+		jbSend.setActionCommand(count1);
+		jbFile.setActionCommand(count2);
+		
+		wordSender = "";
+
+		jbSend.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+				for (int i = 0; i < listaBtnTexts.size(); i++) {
+					String teste = String.valueOf(i);
+					if(jbSend.getActionCommand().equalsIgnoreCase(teste)) {
+						clienteControl.sendMessage(jtxtChatTextSender.getText(), indexJList, i );
+						wordSender = listaLabelChats.get(i).getText();
+//						System.out.println(newWord);
+						wordSender = wordSender+ "You: " + listaJtxtFields.get(i).getText() + "<br>";
+						System.out.println(wordSender);
+						listaLabelChats.get(i).setText("<html>" + wordSender + "</html>");
+//						listaPanel.get(i).add(listaLabelChats.get(i), BorderLayout.CENTER);
+						listaLabelChats.get(i).setText("<html>" + wordSender + "</html>");
+//						String old = listaStringWords.get(i);
+//						listaStringWords.get(i).replace(listaStringWords.get(i), wordSender);
+//						System.out.println("achou " + jbSend.getActionCommand());
+	//					System.out.println(listaStringWords.get(i).toString());
+	//					wordSender = "";
+					}
+				}
+			}
+		});
+
+		jbFile.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				file.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				// String path = file.setFileSelectionMode(FileSystemView.getFileSystemView());
+
+				// clienteControl.sendFile();
+
+			}
+		});
+		frameChat.add(panelChatClient);
+		counter1++;
+		counter2++;
+	}
+
+	public void chatFeed(int index, String res) {
+//		wordSender += "Contact: " + res + "<br>";
+//		listaLabelChats.get(index).setText("<html>" + wordSender + "</html>");
+
 	}
 
 	private void panelMyAccount() {
@@ -416,81 +523,6 @@ public class ClientScreen extends JFrame implements Observador {
 				}
 			}
 		});
-	}
-
-	public void panelChat(String nome, int index) {
-		frameChat = new JFrame();
-		frameChat.setTitle("CHAT");
-		frameChat.setSize(400, 400);
-		frameChat.setResizable(false);
-		frameChat.setLocationRelativeTo(null);
-		frameChat.setVisible(true);
-
-		panelChatClient = new JPanel(new BorderLayout());
-		
-		jlnomeContato = new JLabel(nome);
-		panelChatClient.add(jlnomeContato, BorderLayout.NORTH);
-		
-		JPanel painel = new JPanel();
-		JLabel chat = new JLabel();
-		painel.add(chat);
-		
-//		modelChat = new DefaultListModel<String>();
-//		listaModelChats.add(modelChat);
-//		jListChat = new JList(modelChat);
-//		jListChat.setBackground(Color.cyan);
-//		painel.add(jListChat);
-
-		panelChatClient.add(painel, BorderLayout.CENTER);
-		JScrollPane jscroll = new JScrollPane(jListChat);
-		
-		panelText = new JPanel(new GridLayout(2, 1));
-		panelText.add(jtxtChatTextSender);
-		panelChatButtons = new JPanel();
-		panelChatButtons.setLayout(new FlowLayout());
-		panelChatButtons.add(jbSend);
-		panelChatButtons.add(jbFile);
-		panelText.add(panelChatButtons);
-		
-		panelChatClient.add(panelText, BorderLayout.SOUTH);
-
-		jbSend.addActionListener(new ActionListener() {
-			@SuppressWarnings("unchecked")
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				clienteControl.sendMessage(jtxtChatTextSender.getText(), index, listaModelChats.size()-1);
-				wordSender += "You: "+jtxtChatTextSender.getText()+"<br>";
-				chat.setText("<html>"+wordSender+"</html>");
-				System.out.println(wordSender);
-				
-				//modelChat.add(index, "you: "+jtxtChatTextSender.getText());
-
-			}
-		});
-
-		jbFile.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				file.setFileSelectionMode(JFileChooser.FILES_ONLY);
-				//String path = file.setFileSelectionMode(FileSystemView.getFileSystemView());
-				
-				// clienteControl.sendFile();
-
-			}
-		});
-		frameChat.add(panelChatClient);
-	}
-	
-	public void chatFeed(int index, String res) {
-		listaModelChats.get(index).add(listaModelChats.get(index).getSize(), "Contato: "+res);
-	}
-
-	@Override
-	public void mudouTabuleiro() {
-		chatPrincipal.getAutoResizeMode();
-		chatPrincipal.getFont();
-		chatPrincipal.updateUI();
-		chatPrincipal.repaint();
 	}
 
 }
