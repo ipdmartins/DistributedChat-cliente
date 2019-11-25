@@ -82,8 +82,8 @@ public class ClienteControl {
 			if (socketCliente != null) {
 				streamClient = new StreamClient();
 				streamClient.createStream(socketCliente);
-				RequestManager requestManager = new RequestManager(socketCliente, true);
-//				requestManager.start();
+				RequestManagerCli requestManagerCli = new RequestManagerCli(socketCliente, true);
+				requestManagerCli.start();
 			} else {
 				System.out.println("CONEXÃO NÃO EFETUADA");
 				return false;
@@ -100,7 +100,7 @@ public class ClienteControl {
 		this.connectionManager.start();
 	}
 
-	public String register(String nome, String email, String nasc, String pass) {
+	public void register(String nome, String email, String nasc, String pass) {
 		// cadastro inicial do cliente no server
 		this.cliente.setNome(nome);
 		this.cliente.setEmail(email);
@@ -116,64 +116,127 @@ public class ClienteControl {
 			connect();
 		}
 		// answer ja é uma uma String Json com todos os atributos de cliente.
-		answer = addresser("A", answer);
-		return answer;
+		addresser("A", answer);
 	}
 
-	public boolean validatePass(String text) {
+	public void setRegister(String res) {
+		this.screen.setRegister(res);
+	}
+
+	public void validatePass(String text) {
 		if (serverCliente == null || socketCliente == null || socketCliente.isClosed()) {
 			connect();
 		}
 		answer = cliente.getEmail() + "," + text;
-		answer = addresser("G", answer);
-		if (answer.equalsIgnoreCase("Granted")) {
-			return true;
-		}
-		return false;
+		addresser("G", answer);
 	}
 
-	public List login(String email, String pass) {
+	public void setValidate(String res) {
+		if (res.equalsIgnoreCase("Granted")) {
+			this.screen.setValidate(true);
+		} else {
+			this.screen.setValidate(false);
+		}
+	}
+
+	public void login(String email, String pass) {
 		answer = email + "," + pass;
 		if (serverCliente == null || socketCliente == null || socketCliente.isClosed()) {
 			connect();
 		}
-		answer = addresser("B", answer);
-		if (answer.equalsIgnoreCase("Welcome")) {
-			if (listManager(2) == null) {
+		addresser("B", answer);
+
+//		if (answer.equalsIgnoreCase("Welcome")) {
+//			System.out.println("recebeu welcome");
+//			if (listManager(2, "") == null) {
+//				System.out.println("recebeu lista null");
+//				setServer();
+//				System.out.println("agora a lista de conatos");
+//				return listManager(1, "");
+//			}
+//		}
+
+	}
+
+	public void setLogin(String res) {
+		this.answer = res;
+		if (!answer.equalsIgnoreCase("fail to log")) {
+			if (listManager(2, answer) == null) {
 				setServer();
-				return listManager(1);
 			}
 		}
-		return null;
 	}
 
-	public List addContact(String email) {
+	public void setListContactLogin(String res) {
+		List contatos = listManager(1, res);
+		if (contatos != null) {
+			List<String> dados = new ArrayList<String>();
+			dados.add(this.cliente.getNome());
+			dados.add(this.cliente.getEmail());
+			dados.add(this.cliente.getAnoNasc());
+			dados.add(this.cliente.getSenha());
+			this.screen.setListContact(contatos, 1, dados);
+		}
+	}
+
+	public void setListContactUpdate(String res) {
+		Cliente cli1 = gson.fromJson(res, Cliente.class);
+		List contatosUpdate = new ArrayList<String>();
+
+		for (int i = 0; i < this.cliente.getMyContacts().size(); i++) {
+			if (this.cliente.getMyContacts().get(i).getEmail().equalsIgnoreCase(cli1.getEmail())) {
+				this.cliente.getMyContacts().set(i, cli1);
+			}
+			contatosUpdate.add(cliente.getMyContacts().get(i).getStatus() + " - "
+					+ cliente.getMyContacts().get(i).getNome() + " - " + cliente.getMyContacts().get(i).getEmail());
+		}
+		this.screen.setListContact(contatosUpdate, 0, null);
+	}
+
+	public void addContact(String email) {
 		String add = cliente.getEmail() + "," + email;
 		System.out.println("cli add: " + add);
-		add = addresser("D", add);
-		if (add.equalsIgnoreCase("added")) {
-			return listManager(1);
-		}
-		return null;
+		addresser("D", add);
+
+//		if (add.equalsIgnoreCase("added")) {
+//			return listManager(1, "");
+//		}
+//		return null;
 	}
 
-	public List removeContact(int index) {
-		String remove = cliente.getEmail() + "," + cliente.getMyContacts().get(index).getEmail();
-		remove = addresser("E", remove);
-		if (remove.equalsIgnoreCase("removed")) {
-			return listManager(1);
+	public void setAdded(String res) {
+		List contatos = listManager(1, res);
+		if (contatos != null) {
+			this.screen.setListContact(contatos, 3, null);
 		}
-		return null;
+	}
+
+	public void removeContact(int index) {
+		String remove = cliente.getEmail() + "," + cliente.getMyContacts().get(index).getEmail();
+		addresser("E", remove);
+
+//		if (remove.equalsIgnoreCase("removed")) {
+//			return listManager(1, "");
+//		}
+//		return null;
+	}
+
+	public void setRemoved(String res) {
+		List contatos = listManager(1, res);
+		if (contatos != null) {
+			this.screen.setListContact(contatos, 2, null);
+		}
 	}
 
 	public String startChat(int index) {
 		return cliente.getMyContacts().get(index).getNome();
 	}
 
-	public void sendMessage(String message, int index, int indexListaLabelChat) {
+	public void sendMessage(String message, int index) {
 		String ip = cliente.getMyContacts().get(index).getIpCliente();
 		int porta = cliente.getMyContacts().get(index).getPortaCliente();
-		System.out.println("ip: "+ip+" porta: "+porta);
+		System.out.println("ip: " + ip + " porta: " + porta);
+
 		try {
 			Socket socketContato = new Socket(ip, porta);
 			if (socketContato != null) {
@@ -181,7 +244,7 @@ public class ClienteControl {
 				streamContact.createStream(socketContato);
 				streamContact.sendMessage(message);
 				System.out.println("DEU BOA A MSG");
-				modelChatMap.put(ip, indexListaLabelChat);
+//				modelChatMap.put(ip, indexListaLabelChat);
 				streamContact.closeStream();
 				socketContato.close();
 			} else {
@@ -193,12 +256,12 @@ public class ClienteControl {
 	}
 
 	public void contactMessage(String res, Socket socket) {
-		System.out.println("chegou "+res);
+		System.out.println("chegou " + res);
 		String ip = socket.getInetAddress().toString();
 		if (ip.contains("/")) {
 			ip = ip.replace("/", "");
 		}
-		System.out.println("ip aqui: "+ip);
+		System.out.println("ip aqui: " + ip);
 		if (modelChatMap.containsValue(ip)) {
 			// DEVE RETORNAR O INTEGER DO HASHMAP
 			this.screen.chatFeed(modelChatMap.get(ip), res);
@@ -213,27 +276,39 @@ public class ClienteControl {
 		}
 	}
 
-	public List listManager(int option) {
+	public List listManager(int option, String message) {
 		List<String> contatos = null;
-		try {
-			if (option == 1) {
-				String jsonLista = streamClient.readMessage();
-				Type tipoLista = new TypeToken<ArrayList<Cliente>>() {
-				}.getType();
-				listaClintes = gson.fromJson(jsonLista, tipoLista);
-				cliente.setMyContacts(listaClintes);
-				contatos = new ArrayList<String>();
-				for (int i = 0; i < listaClintes.size(); i++) {
-					contatos.add(listaClintes.get(i).getStatus() + " - " + listaClintes.get(i).getNome() + " - "
-							+ listaClintes.get(i).getEmail());
-				}
-			} else if (option == 2) {
-				String cliente = streamClient.readMessage();
-				this.cliente = gson.fromJson(cliente, Cliente.class);
+
+		if (option == 1) {
+			contatos = new ArrayList<String>();
+			String jsonLista = message;
+			Type tipoLista = new TypeToken<ArrayList<Cliente>>() {
+			}.getType();
+			listaClintes = gson.fromJson(jsonLista, tipoLista);
+			System.out.println(listaClintes + " - " + listaClintes.size());
+			cliente.setMyContacts(listaClintes);
+			for (int i = 0; i < listaClintes.size(); i++) {
+				contatos.add(listaClintes.get(i).getStatus() + " - " + listaClintes.get(i).getNome() + " - "
+						+ listaClintes.get(i).getEmail());
 			}
-		} catch (IOException e) {
-			System.err.println("ERRO AO RECEBER LISTA GSON DO SERVER " + e);
+		} else if (option == 2) {
+//				String cliente = streamClient.readMessage();
+//				System.out.println(cliente);
+			this.cliente = gson.fromJson(message, Cliente.class);
+			System.out.println(this.cliente.toString());
+
+		} else if (option == 3) {
+			Cliente cli = new Cliente();
+			cli.setCliente(gson.fromJson(message, Cliente.class));
+			for (int i = 0; i < cliente.getMyContacts().size(); i++) {
+				if (cliente.getMyContacts().get(i).getEmail().equalsIgnoreCase(cli.getEmail())) {
+					cliente.getMyContacts().get(i).setCliente(cli);
+					String contato = cli.getStatus() + " - " + cli.getNome() + " - " + cli.getEmail();
+					this.screen.actualizeJList(i, contato);
+				}
+			}
 		}
+
 		return contatos;
 	}
 
@@ -247,10 +322,13 @@ public class ClienteControl {
 		}
 	}
 
-	public String logout() {
-		answer = addresser("C", cliente.getEmail());
+	public void logout() {
+		addresser("C", cliente.getEmail());
+	}
 
-		if (answer.equalsIgnoreCase("logged out")) {
+	public void setLogout(String res) {
+		this.screen.setLogout(res);
+		if (res.equalsIgnoreCase("logged out")) {
 			if (!socketCliente.isClosed()) {
 				try {
 					socketCliente.close();
@@ -259,18 +337,17 @@ public class ClienteControl {
 				}
 			}
 		}
-		return answer;
 	}
 
-	public String addresser(String req, String response) {
+	public void addresser(String req, String response) {
 		try {
 			streamClient.sendMessage(req);
 			streamClient.sendMessage(response);// response é o Json sendo enviado
-			this.answer = streamClient.readMessage();
+//			this.answer = streamClient.readMessage();
 		} catch (IOException e) {
 			System.err.println("ERRO ENVIO GSON REGISTRO" + e);
 		}
-		return answer;
+//		return this.answer;
 	}
 
 //	public void String sendFile(File file) {

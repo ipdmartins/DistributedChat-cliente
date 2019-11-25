@@ -216,15 +216,20 @@ public class ClientScreen extends JFrame {
 		jbLogout.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				String s = clienteControl.logout();
-				optionPane.showMessageDialog(null, s);
-				// FALTA MODEL.CLEAR
+				clienteControl.logout();
 			}
 		});
 
 		panelMenuBtn.add(jbLoginMenu);
 		panelMenuBtn.add(jbMyAccount);
 		panelMenuBtn.add(jbLogout);
+	}
+	
+	public void setLogout(String res) {
+		optionPane.showMessageDialog(null, res);
+		if(res.equalsIgnoreCase("logged out")) {
+			model.clear();
+		}
 	}
 
 	private void panelUsers() {
@@ -252,7 +257,6 @@ public class ClientScreen extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				String res = clienteControl.startChat(list.getSelectedIndex());
-
 				panelChat(res, list.getSelectedIndex(), "");
 			}
 		});
@@ -260,15 +264,16 @@ public class ClientScreen extends JFrame {
 		jbRemove.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				List<String> lista = null;
-				lista = clienteControl.removeContact(list.getSelectedIndex());
-				if (lista != null) {
-					optionPane.showMessageDialog(null, "removed");
-					model.clear();
-					for (int i = 0; i < lista.size(); i++) {
-						model.add(i, i + ") " + lista.get(i));
-					}
-				}
+				clienteControl.removeContact(list.getSelectedIndex());
+
+//				List<String> lista = null;
+//				if (lista != null) {
+//					optionPane.showMessageDialog(null, "removed");
+//					model.clear();
+//					for (int i = 0; i < lista.size(); i++) {
+//						model.add(i, i + ") " + lista.get(i));
+//					}
+//				}
 			}
 		});
 
@@ -292,15 +297,7 @@ public class ClientScreen extends JFrame {
 		jbNewContact.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				List<String> lista = null;
-				lista = clienteControl.addContact(JtxtNewContact.getText());
-				if (lista != null) {
-					optionPane.showMessageDialog(null, "added");
-					model.clear();
-					for (int i = 0; i < lista.size(); i++) {
-						model.add(i, i + ") " + lista.get(i));
-					}
-				}
+				clienteControl.addContact(JtxtNewContact.getText());
 			}
 		});
 	}
@@ -314,7 +311,7 @@ public class ClientScreen extends JFrame {
 		frameChat.setVisible(true);
 
 		panelChatClient = new JPanel(new BorderLayout());
-		listaPanel.add(panelChatClient);
+//		listaPanel.add(panelChatClient);
 
 		jlnomeContato = new JLabel(nome);
 		panelChatClient.add(jlnomeContato, BorderLayout.NORTH);
@@ -326,12 +323,11 @@ public class ClientScreen extends JFrame {
 		}else {
 			jlChat = new JLabel();
 		}
-		listaLabelChats.add(jlChat);
+//		listaLabelChats.add(jlChat);
 //		painel.add(listaLabelChats.get(listaLabelChats.size()-1));
 //		System.out.println(listaLabelChats.size());
-		panelChatClient.add(listaLabelChats.get(listaLabelChats.size()-1), BorderLayout.CENTER);
+		panelChatClient.add(jlChat, BorderLayout.CENTER);
 //		JScrollPane jscroll = new JScrollPane(painel);
-
 			
 		jbSend = new JButton("Send text");
 		jbFile = new JButton("Send file");
@@ -339,8 +335,8 @@ public class ClientScreen extends JFrame {
 		jbFile.setMnemonic(counter2);
 //		System.out.println(jbSend.getMnemonic());
 //		System.out.println(jbFile.getMnemonic());
-		listaBtnTexts.add(jbSend);
-		listaBtnTexts.add(jbFile);
+//		listaBtnTexts.add(jbSend);
+//		listaBtnTexts.add(jbFile);
 
 		panelText = new JPanel(new GridLayout(2, 1));
 		this.jtxtChatTextSender = new JTextField();
@@ -363,25 +359,29 @@ public class ClientScreen extends JFrame {
 		jbSend.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				clienteControl.sendMessage(jtxtChatTextSender.getText(), indexJList);
+				wordSender = jlChat.getText();
+				wordSender += "You: " + jtxtChatTextSender.getText() + "<br>";
+				System.out.println(wordSender);
+				jlChat.setText("<html>" + wordSender + "</html>");
 				
-				for (int i = 0; i < listaBtnTexts.size(); i++) {
-					String teste = String.valueOf(i);
-					if(jbSend.getActionCommand().equalsIgnoreCase(teste)) {
-						clienteControl.sendMessage(jtxtChatTextSender.getText(), indexJList, i );
-						wordSender = listaLabelChats.get(i).getText();
+//				for (int i = 0; i < listaBtnTexts.size(); i++) {
+//					String teste = String.valueOf(i);
+//					if(jbSend.getActionCommand().equalsIgnoreCase(teste)) {
+//						clienteControl.sendMessage(jtxtChatTextSender.getText(), indexJList, i );
+						
+//						wordSender = listaLabelChats.get(i).getText();
 //						System.out.println(newWord);
-						wordSender = wordSender+ "You: " + listaJtxtFields.get(i).getText() + "<br>";
-						System.out.println(wordSender);
-						listaLabelChats.get(i).setText("<html>" + wordSender + "</html>");
+//						wordSender += "You: " + listaJtxtFields.get(i).getText() + "<br>";
+//						listaLabelChats.get(i).setText("<html>" + wordSender + "</html>");
 //						listaPanel.get(i).add(listaLabelChats.get(i), BorderLayout.CENTER);
-						listaLabelChats.get(i).setText("<html>" + wordSender + "</html>");
 //						String old = listaStringWords.get(i);
 //						listaStringWords.get(i).replace(listaStringWords.get(i), wordSender);
 //						System.out.println("achou " + jbSend.getActionCommand());
 	//					System.out.println(listaStringWords.get(i).toString());
 	//					wordSender = "";
-					}
-				}
+//					}
+//				}
 			}
 		});
 
@@ -431,16 +431,16 @@ public class ClientScreen extends JFrame {
 		jbSave.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				String s = clienteControl.register(jtxtName.getText(), jtxtEmailAccount.getText(), jtxtBirth.getText(),
+				clienteControl.register(jtxtName.getText(), jtxtEmailAccount.getText(), jtxtBirth.getText(),
 						jtxtPasswordAccount.getText());
-				optionPane.showMessageDialog(null, s);
-				if (s.equalsIgnoreCase("stored") || s.equalsIgnoreCase("actualized")) {
-					jtxtEmailAccount.setEnabled(false);
-					jtxtPasswordAccount.setEnabled(false);
-					jtxtEmailAccount.setVisible(false);
-					jtxtPasswordAccount.setVisible(false);
-					enablePanel(0);
-				}
+//				optionPane.showMessageDialog(null, s);
+//				if (s.equalsIgnoreCase("stored") || s.equalsIgnoreCase("actualized")) {
+//					jtxtEmailAccount.setEnabled(false);
+//					jtxtPasswordAccount.setEnabled(false);
+//					jtxtEmailAccount.setVisible(false);
+//					jtxtPasswordAccount.setVisible(false);
+//					enablePanel(0);
+//				}
 			}
 		});
 
@@ -467,15 +467,36 @@ public class ClientScreen extends JFrame {
 		jbValidatePass.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				boolean res = clienteControl.validatePass(jtxtValidatePass.getText());
-				if (res) {
-					optionPane.showMessageDialog(null, "Granted");
-					enablePanel(1);
-				} else {
-					optionPane.showMessageDialog(null, "Validation failed");
-				}
+				clienteControl.validatePass(jtxtValidatePass.getText());
+//				if (res) {
+//					optionPane.showMessageDialog(null, "Granted");
+//					enablePanel(1);
+//				} else {
+//					optionPane.showMessageDialog(null, "Validation failed");
+//				}
 			}
 		});
+	}
+	
+	public void setValidate(boolean b) {
+		if (b) {
+			optionPane.showMessageDialog(null, "Granted");
+			enablePanel(1);
+		} else {
+			optionPane.showMessageDialog(null, "Validation failed");
+		}
+
+	}
+	
+	public void setRegister(String res) {
+		optionPane.showMessageDialog(null, res);
+		if (res.equalsIgnoreCase("stored") || res.equalsIgnoreCase("actualized")) {
+			jtxtEmailAccount.setEnabled(false);
+			jtxtPasswordAccount.setEnabled(false);
+			jtxtEmailAccount.setVisible(false);
+			jtxtPasswordAccount.setVisible(false);
+			enablePanel(0);
+		}
 	}
 
 	private void enablePanel(int cond) {
@@ -513,16 +534,43 @@ public class ClientScreen extends JFrame {
 		jbLogin.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				List<String> lista = null;
-				lista = clienteControl.login(jtxtEmailLogin.getText(), jtxtPassword.getText());
-				if (lista != null) {
-					optionPane.showMessageDialog(null, "Welcome");
-					for (int i = 0; i < lista.size(); i++) {
-						model.add(i, i + ") " + lista.get(i));
-					}
-				}
+//				List<String> lista = null;
+				clienteControl.login(jtxtEmailLogin.getText(), jtxtPassword.getText());
+//				if (lista != null) {
+//					optionPane.showMessageDialog(null, "Welcome");
+//					for (int i = 0; i < lista.size(); i++) {
+//						model.add(i, i + ") " + lista.get(i));
+//					}
+//				}
 			}
 		});
+	}
+	
+	public void setListContact(List lista, int opt, List<String> dados) {
+		List<String> list;
+		list = lista;
+		if(opt == 1) {
+			optionPane.showMessageDialog(null, "Welcome");
+			jtxtName.setText(dados.get(0));
+			jtxtEmailAccount.setText(dados.get(1));
+			jtxtBirth.setText(dados.get(2));
+			jtxtPasswordAccount.setText(dados.get(3));
+			enablePanel(0);
+		}else if(opt ==2) {
+			optionPane.showMessageDialog(null, "removed");
+		}else if(opt ==3) {
+			optionPane.showMessageDialog(null, "added");
+		}
+		if (list != null) {
+			model.clear();
+			for (int i = 0; i < list.size(); i++) {
+				model.add(i, i + ") " + list.get(i));
+			}
+		}
+	}
+	
+	public void actualizeJList(int index, String contato) {
+		model.add(index, index + ") " + contato);
 	}
 
 }

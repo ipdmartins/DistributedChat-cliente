@@ -16,15 +16,10 @@ import java.net.SocketException;
  */
 public class ConnectionManager extends Thread {
 
-	private ServerSocket serverCliente;
-	private RequestManager requestManager;
 	private int porta;
+	private ServerSocket serverCliente;
 	private Socket socket;
-
-
-//    private StreamClient streamClient;
-//    private String res;
-//    private int idStream;
+	private RequestManagerCli requestManagerCli;
 
 	public ConnectionManager(int porta) {
 		this.porta = porta;
@@ -38,18 +33,15 @@ public class ConnectionManager extends Thread {
 			
 			while (true) {
 				socket = null;
-				System.out.println("CLIENTE NO AGUARDO");
+				System.out.println("ServerSocket CLIENTE NO AGUARDO");
 				socket = serverCliente.accept();
 
 				if (socket != null) {
-					requestManager = new RequestManager(socket, false);
-					requestManager.start();
+					requestManagerCli = new RequestManagerCli(socket, false);
+					requestManagerCli.start();
 				} else {
 					System.err.println("ERRO CONEXÃO requesteManager");
 				}
-
-//				clienteControl.clienteConnector(socket);
-
 			}
 		} catch (SocketException ex) {
 			System.err.println("ERRO NO REQUESTMANAGER " + ex);
