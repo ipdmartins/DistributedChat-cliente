@@ -338,6 +338,8 @@ public class ClientScreen extends JFrame {
 		if (cond == 0) {
 			jtxtName.setEnabled(false);
 			jtxtBirth.setEnabled(false);
+			jtxtEmailAccount.setEnabled(false);
+			jtxtPasswordAccount.setEnabled(false);
 			jbSave.setEnabled(false);
 			jbActualize.setEnabled(true);
 		} else if (cond == 1) {

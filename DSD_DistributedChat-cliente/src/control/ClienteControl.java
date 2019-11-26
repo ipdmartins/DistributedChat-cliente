@@ -167,6 +167,8 @@ public class ClienteControl {
 		if (!answer.equalsIgnoreCase("fail to log")) {
 			if (listManager(2, answer) == null) {
 				setServer();
+				NotifyAlive notifyalive = new NotifyAlive(this.cliente.getEmail(), this.streamClient);
+				notifyalive.start();
 			}
 		}
 	}
@@ -283,7 +285,8 @@ public class ClienteControl {
 			if (listaIps.get(i).equalsIgnoreCase(ip)) {
 				System.out.println("valor int do hashmap " + listaIps.get(i));
 				cond = false;
-				this.screen.chatFeed(listaIndex.get(i), res, 1, "");
+				this.screen.chatFeed(listaIndex.get(i), res, 1, "Contato");
+				break;
 			}
 		}
 		if (cond) {
@@ -356,16 +359,6 @@ public class ClienteControl {
 		}
 
 		return contatos;
-	}
-
-	public void notifylive() {
-		try {
-			sleep(40000);
-			answer = cliente.getEmail();
-			addresser("F", answer);
-		} catch (InterruptedException e) {
-			System.err.println("ERRO ENVIO GSON REGISTRO" + e);
-		}
 	}
 
 	public void logout() {
