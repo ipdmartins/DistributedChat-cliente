@@ -7,6 +7,7 @@ package control;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -90,45 +91,53 @@ public class RequestManagerCli extends Thread {
 					res = streamContact.readMessage();
 					clienteControl.contactMessage(res, socket);
 				} else if (res.equalsIgnoreCase("B")) {
-					ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
 					ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
-					File fileReceiver = null;
-					while ((fileReceiver = (File) inputStream.readObject()) != null) {
-						//streamMap.put(fileReceiver.getCliente(), outputstream);
-						if(fileReceiver != null) {
-							outputStream.writeObject(fileReceiver);
+					File myFile = new File("C:\\users\\");
+					FileOutputStream fis = new FileOutputStream(myFile);
+					byte[] mybytearray = new byte[4096];
+					
+					while(true) {
+						int filesize = inputStream.read(mybytearray);
+						if(filesize == -1) {
+							break;
 						}
+						fis.write(mybytearray, 0, filesize);
 					}
-					
-					
-					
-					
-					res = streamContact.readMessage();
-					int filesize = 6022386; // filesize temporary hardcoded
-					long start = System.currentTimeMillis();
-					int bytesRead;
-					int current = 0;
-
-					// receive file
-					byte[] mybytearray = new byte[filesize];
-					InputStream is = socket.getInputStream();
-					FileOutputStream fos = new FileOutputStream(res);
-					BufferedOutputStream bos = new BufferedOutputStream(fos);
-					bytesRead = is.read(mybytearray, 0, mybytearray.length);
-					current = bytesRead;
-
-					do {
-						bytesRead = is.read(mybytearray, current, (mybytearray.length - current));
-						if (bytesRead >= 0) {
-							current += bytesRead;
-						}
-					} while (bytesRead > -1);
-
-					bos.write(mybytearray, 0, current);
-					bos.flush();
-					long end = System.currentTimeMillis();
-					System.out.println(end - start);
-					bos.close();
+									
+//					ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
+//					File fileReceiver = null;
+//					while ((fileReceiver = (File) inputStream.readObject()) != null) {
+//						//streamMap.put(fileReceiver.getCliente(), outputstream);
+//						if(fileReceiver != null) {
+//							outputStream.writeObject(fileReceiver);
+//						}
+//					}
+//						res = streamContact.readMessage();
+//					int filesize = 6022386; // filesize temporary hardcoded
+//					long start = System.currentTimeMillis();
+//					int bytesRead;
+//					int current = 0;
+//
+//					// receive file
+//					byte[] mybytearray = new byte[filesize];
+//					InputStream is = socket.getInputStream();
+//					FileOutputStream fos = new FileOutputStream(res);
+//					BufferedOutputStream bos = new BufferedOutputStream(fos);
+//					bytesRead = is.read(mybytearray, 0, mybytearray.length);
+//					current = bytesRead;
+//
+//					do {
+//						bytesRead = is.read(mybytearray, current, (mybytearray.length - current));
+//						if (bytesRead >= 0) {
+//							current += bytesRead;
+//						}
+//					} while (bytesRead > -1);
+//
+//					bos.write(mybytearray, 0, current);
+//					bos.flush();
+//					long end = System.currentTimeMillis();
+//					System.out.println(end - start);
+//					bos.close();
 					socket.close();
 			}
 				streamContact.closeStream();
@@ -137,10 +146,7 @@ public class RequestManagerCli extends Thread {
 			System.err.println("ERRO NO REQUESTMANAGER " + ex);
 		} catch (IOException ex) {
 			System.err.println("ERRO NO REQUESTMANAGER " + ex);
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		} 
 	}
 
 }

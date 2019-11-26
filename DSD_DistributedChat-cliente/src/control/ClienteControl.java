@@ -65,7 +65,7 @@ public class ClienteControl {
 		this.socketCliente = null;
 		this.observadores = new ArrayList<>();
 		this.serverPort = 56005;
-		this.serverIP = "192.168.2.171";
+		this.serverIP = "10.60.185.183";
 		this.listStreams = new ArrayList<StreamClient>();
 		this.listaIps = new ArrayList<String>();
 		this.listaIndex = new ArrayList<Integer>();

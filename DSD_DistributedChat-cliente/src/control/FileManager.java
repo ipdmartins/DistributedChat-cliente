@@ -24,8 +24,18 @@ public class FileManager extends Thread {
 	public void run() {
 		try {
 
-			while (true) {
-//				ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
+				ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
+				File myFile = new File(path);
+				FileInputStream fis = new FileInputStream(myFile);
+				byte[] mybytearray = new byte[(int) myFile.length()];
+				
+				while (true) {
+					int filesize = fis.read(mybytearray);
+					if(filesize == -1) {
+						break;
+					}
+					outputStream.write(mybytearray, 0, filesize);
+					
 				
 //				int filesize = 6022386; // filesize temporary hardcoded
 //				long start = System.currentTimeMillis();
@@ -54,23 +64,19 @@ public class FileManager extends Thread {
 //				bos.close();
 //				socket.close();
 				
-				
-				
-				
-				
-				
-				
-				File myFile = new File(path);
-				byte[] mybytearray = new byte[(int) myFile.length()];
-				FileInputStream fis = new FileInputStream(myFile);
-				BufferedInputStream bis = new BufferedInputStream(fis);
-				bis.read(mybytearray, 0, mybytearray.length);
-				//ObjectOutputStream...
-				OutputStream os = socket.getOutputStream();
-				System.out.println("Sending...");
-				os.write(mybytearray, 0, mybytearray.length);
-				os.flush();
-				socket.close();
+					
+//				File myFile = new File(path);
+//				byte[] mybytearray = new byte[(int) myFile.length()];
+//				FileInputStream fis = new FileInputStream(myFile);
+//				
+//				BufferedInputStream bis = new BufferedInputStream(fis);
+//				bis.read(mybytearray, 0, mybytearray.length);
+//				//ObjectOutputStream...
+//				OutputStream os = socket.getOutputStream();
+//				System.out.println("Sending...");
+//				os.write(mybytearray, 0, mybytearray.length);
+//				os.flush();
+//				socket.close();
 			}
 		} catch (Exception e) {
 			System.err.println("ERRO ENVIO ARQUIVO "+e);
