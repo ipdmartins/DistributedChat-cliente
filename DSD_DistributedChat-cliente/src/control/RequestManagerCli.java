@@ -5,14 +5,10 @@
  */
 package control;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketException;
 
@@ -33,7 +29,6 @@ public class RequestManagerCli extends Thread {
 		this.server = server;
 		this.res = "";
 		this.clienteControl = ClienteControl.getInstance();
-
 	}
 
 	@Override
@@ -103,43 +98,8 @@ public class RequestManagerCli extends Thread {
 						}
 						fis.write(mybytearray, 0, filesize);
 					}
-									
-//					ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
-//					File fileReceiver = null;
-//					while ((fileReceiver = (File) inputStream.readObject()) != null) {
-//						//streamMap.put(fileReceiver.getCliente(), outputstream);
-//						if(fileReceiver != null) {
-//							outputStream.writeObject(fileReceiver);
-//						}
-//					}
-//						res = streamContact.readMessage();
-//					int filesize = 6022386; // filesize temporary hardcoded
-//					long start = System.currentTimeMillis();
-//					int bytesRead;
-//					int current = 0;
-//
-//					// receive file
-//					byte[] mybytearray = new byte[filesize];
-//					InputStream is = socket.getInputStream();
-//					FileOutputStream fos = new FileOutputStream(res);
-//					BufferedOutputStream bos = new BufferedOutputStream(fos);
-//					bytesRead = is.read(mybytearray, 0, mybytearray.length);
-//					current = bytesRead;
-//
-//					do {
-//						bytesRead = is.read(mybytearray, current, (mybytearray.length - current));
-//						if (bytesRead >= 0) {
-//							current += bytesRead;
-//						}
-//					} while (bytesRead > -1);
-//
-//					bos.write(mybytearray, 0, current);
-//					bos.flush();
-//					long end = System.currentTimeMillis();
-//					System.out.println(end - start);
-//					bos.close();
-					socket.close();
 			}
+				socket.close();
 				streamContact.closeStream();
 			}
 		} catch (SocketException ex) {

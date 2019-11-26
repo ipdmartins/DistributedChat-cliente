@@ -8,7 +8,6 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -25,8 +24,6 @@ public class ChatManager extends Thread {
 
 	private String nome;
 	private int contatoSelecionado;
-	private String res;
-
 	private JFrame frameChat;
 	private JPanel panelChatClient;
 	private JPanel panelText;
@@ -36,7 +33,6 @@ public class ChatManager extends Thread {
 	private JButton jbFile;
 	private JTextField jtxtChatTextSender;
 	private JTextArea jtxtChat;
-	private String wordSender;
 	private ClienteControl clienteControl;
 	private JFileChooser fileChooser;
 	private int listachatManagerIndex;
@@ -45,7 +41,6 @@ public class ChatManager extends Thread {
 	public ChatManager(String nome, int index) {
 		this.nome = nome;
 		this.contatoSelecionado = index;
-		this.wordSender = "";
 		this.clienteControl = ClienteControl.getInstance();
 		this.listaConversa = new ArrayList<String>();
 
@@ -83,10 +78,6 @@ public class ChatManager extends Thread {
 		panelText.add(panelChatButtons);
 
 		panelChatClient.add(panelText, BorderLayout.SOUTH);
-//		String count1 = String.valueOf(counter1);
-//		String count2 = String.valueOf(counter2);
-//		jbSend.setActionCommand(count1);
-//		jbFile.setActionCommand(count2);
 		
 		jbSend.addActionListener(new ActionListener() {
 			@Override

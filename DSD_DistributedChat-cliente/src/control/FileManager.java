@@ -1,20 +1,17 @@
 package control;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.net.Socket;
 
 public class FileManager extends Thread {
 
 	private Socket socket;
 	private String path;
-	private StreamClient streamFile;
 
 	public FileManager(Socket socket, String path) {
 		this.socket = socket;
@@ -23,63 +20,23 @@ public class FileManager extends Thread {
 
 	public void run() {
 		try {
-
-				ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
-				File myFile = new File(path);
-				FileInputStream fis = new FileInputStream(myFile);
-				byte[] mybytearray = new byte[(int) myFile.length()];
-				
-				while (true) {
-					int filesize = fis.read(mybytearray);
-					if(filesize == -1) {
-						break;
-					}
-					outputStream.write(mybytearray, 0, filesize);
-					
-				
-//				int filesize = 6022386; // filesize temporary hardcoded
-//				long start = System.currentTimeMillis();
-//				int bytesRead;
-//				int current = 0;
-//
-//				// receive file
-//				byte[] mybytearray = new byte[filesize];
-//				InputStream is = socket.getInputStream();
-//				FileOutputStream fos = new FileOutputStream("pathminhamaquina");
-//				BufferedOutputStream bos = new BufferedOutputStream(fos);
-//				bytesRead = is.read(mybytearray, 0, mybytearray.length);
-//				current = bytesRead;
-//
-//				do {
-//					bytesRead = is.read(mybytearray, current, (mybytearray.length - current));
-//					if (bytesRead >= 0) {
-//						current += bytesRead;
-//					}
-//				} while (bytesRead > -1);
-//
-//				bos.write(mybytearray, 0, current);
-//				bos.flush();
-//				long end = System.currentTimeMillis();
-//				System.out.println(end - start);
-//				bos.close();
-//				socket.close();
-				
-					
-//				File myFile = new File(path);
-//				byte[] mybytearray = new byte[(int) myFile.length()];
-//				FileInputStream fis = new FileInputStream(myFile);
-//				
-//				BufferedInputStream bis = new BufferedInputStream(fis);
-//				bis.read(mybytearray, 0, mybytearray.length);
-//				//ObjectOutputStream...
-//				OutputStream os = socket.getOutputStream();
-//				System.out.println("Sending...");
-//				os.write(mybytearray, 0, mybytearray.length);
-//				os.flush();
-//				socket.close();
+			
+			byte[] mybytearray = new byte[6022386];
+			InputStream input = socket.getInputStream();
+			FileOutputStream output = new FileOutputStream(path);
+			BufferedOutputStream bos = new BufferedOutputStream(output);
+			int bytesRead = input.read(mybytearray,0,mybytearray.length);
+			int current = bytesRead;
+			
+			while (bytesRead > -1) {
+				input.read(mybytearray, current, (mybytearray.length-current));
+		         if(bytesRead >= 0) current += bytesRead;
 			}
+			bos.write(mybytearray, 0 , current);
+		      bos.flush();
+
 		} catch (Exception e) {
-			System.err.println("ERRO ENVIO ARQUIVO "+e);
+			System.err.println("ERRO ENVIO ARQUIVO " + e);
 		}
 	}
 

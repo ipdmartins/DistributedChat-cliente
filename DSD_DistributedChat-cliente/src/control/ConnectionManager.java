@@ -33,9 +33,8 @@ public class ConnectionManager extends Thread {
 			
 			while (true) {
 				socket = null;
-				System.out.println("ServerSocket CLIENTE NO AGUARDO");
 				socket = serverCliente.accept();
-
+				
 				if (socket != null) {
 					requestManagerCli = new RequestManagerCli(socket, false);
 					requestManagerCli.start();
