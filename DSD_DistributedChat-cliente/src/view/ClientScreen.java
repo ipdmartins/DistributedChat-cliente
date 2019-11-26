@@ -1,45 +1,21 @@
 package view;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Container;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.SpringLayout;
-import javax.swing.filechooser.FileSystemView;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.DefaultTableCellRenderer;
-
 import control.ClienteControl;
-import control.Observador;
 
 public class ClientScreen extends JFrame {
 
@@ -92,30 +68,9 @@ public class ClientScreen extends JFrame {
 	private JButton jbValidatePass;
 
 	// PAINEL CHAT
-	private JFrame frameChat;
-	private JLabel jlnomeContato;
-	private JPanel panelChatClient;
-
-	private JPanel panelContact;
-	private JPanel panelText;
-
-	private JPanel panelChatButtons;
 	private JTextField jtxtChatText;
-	private JTextField jtxtChatTextSender;
-	private JButton jbSend;
-	private JButton jbFile;
-	private List<JLabel> listaLabelChats;
-	private List<JButton> listaBtnTexts;
-	private List<JButton> listaBtnFiles;
-	private List<JTextField> listaJtxtFields;
-	private List<JPanel> listaPanel;
-	private JFileChooser file;
-	String wordSender;
-
-	private int counter1;
-	private int counter2;
-
-	private JOptionPane optionPane;
+	private List<ChatManager> listachatManager;
+	private ChatManager chatManager;
 
 	private ClienteControl clienteControl;
 
@@ -133,17 +88,9 @@ public class ClientScreen extends JFrame {
 
 		clienteControl = ClienteControl.getInstance();
 		clienteControl.setScreen(this);
-		optionPane = new JOptionPane();
 		model = new DefaultListModel();
 		list = new JList(model);
-		listaLabelChats = new ArrayList<JLabel>();
-		listaBtnTexts = new ArrayList<JButton>();
-		listaBtnFiles = new ArrayList<JButton>();
-		listaJtxtFields = new ArrayList<JTextField>();
-		listaPanel = new ArrayList<JPanel>();
-		file = new JFileChooser();
-		counter1 = 0;
-		counter2 = 0;
+		listachatManager = new ArrayList<ChatManager>();
 
 		// LABELS
 		jlValidatePass = new JLabel("Digite sua senha");
@@ -193,9 +140,6 @@ public class ClientScreen extends JFrame {
 
 		panelMyLogin();
 		frameLogin.add(panelMyLogin);
-
-//		frameChat.add(panelChatClient, BorderLayout.CENTER);
-
 	}
 
 	private void panelMenuBtn() {
@@ -224,10 +168,10 @@ public class ClientScreen extends JFrame {
 		panelMenuBtn.add(jbMyAccount);
 		panelMenuBtn.add(jbLogout);
 	}
-	
+
 	public void setLogout(String res) {
-		optionPane.showMessageDialog(null, res);
-		if(res.equalsIgnoreCase("logged out")) {
+		JOptionPane.showMessageDialog(null, res);
+		if (res.equalsIgnoreCase("logged out")) {
 			model.clear();
 		}
 	}
@@ -257,7 +201,14 @@ public class ClientScreen extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				String res = clienteControl.startChat(list.getSelectedIndex());
-				panelChat(res, list.getSelectedIndex(), "");
+				if (res.equalsIgnoreCase("OFFLINE")) {
+					JOptionPane.showMessageDialog(null, "Seu contato está OFFLINE");
+				} else {
+					chatManager = new ChatManager(res, list.getSelectedIndex());//passa o 1
+					listachatManager.add(chatManager);// na posicao 0
+					chatManager.setListachatManagerIndex(listachatManager.size() - 1);
+					chatManager.panelChat("");
+				}
 			}
 		});
 
@@ -265,15 +216,6 @@ public class ClientScreen extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				clienteControl.removeContact(list.getSelectedIndex());
-
-//				List<String> lista = null;
-//				if (lista != null) {
-//					optionPane.showMessageDialog(null, "removed");
-//					model.clear();
-//					for (int i = 0; i < lista.size(); i++) {
-//						model.add(i, i + ") " + lista.get(i));
-//					}
-//				}
 			}
 		});
 
@@ -302,108 +244,16 @@ public class ClientScreen extends JFrame {
 		});
 	}
 
-	public void panelChat(String nome, int indexJList, String message) {
-		frameChat = new JFrame();
-		frameChat.setTitle("CHAT");
-		frameChat.setSize(450, 550);
-		frameChat.setResizable(false);
-		frameChat.setLocationRelativeTo(null);
-		frameChat.setVisible(true);
+	public void chatFeed(int indexLista, String res, int req, String nome) {
+		if (req == 1) {
+			listachatManager.get(indexLista).chatFeeder(nome, res);
+		} else if (req == 2) {
+			chatManager = new ChatManager(nome,indexLista);
+			listachatManager.add(chatManager);
+			chatManager.setListachatManagerIndex(listachatManager.size() - 1);
+			chatManager.panelChat(res);
 
-		panelChatClient = new JPanel(new BorderLayout());
-//		listaPanel.add(panelChatClient);
-
-		jlnomeContato = new JLabel(nome);
-		panelChatClient.add(jlnomeContato, BorderLayout.NORTH);
-
-//		JPanel painel = new JPanel();
-		JLabel jlChat;
-		if(!message.equalsIgnoreCase("")) {
-			jlChat = new JLabel(nome +": "+ message+" ");
-		}else {
-			jlChat = new JLabel();
 		}
-//		listaLabelChats.add(jlChat);
-//		painel.add(listaLabelChats.get(listaLabelChats.size()-1));
-//		System.out.println(listaLabelChats.size());
-		panelChatClient.add(jlChat, BorderLayout.CENTER);
-//		JScrollPane jscroll = new JScrollPane(painel);
-			
-		jbSend = new JButton("Send text");
-		jbFile = new JButton("Send file");
-		jbSend.setMnemonic(counter1);
-		jbFile.setMnemonic(counter2);
-//		System.out.println(jbSend.getMnemonic());
-//		System.out.println(jbFile.getMnemonic());
-//		listaBtnTexts.add(jbSend);
-//		listaBtnTexts.add(jbFile);
-
-		panelText = new JPanel(new GridLayout(2, 1));
-		this.jtxtChatTextSender = new JTextField();
-		listaJtxtFields.add(this.jtxtChatTextSender);
-		panelText.add(jtxtChatTextSender);
-		panelChatButtons = new JPanel();
-		panelChatButtons.setLayout(new FlowLayout());
-		panelChatButtons.add(jbSend);
-		panelChatButtons.add(jbFile);
-		panelText.add(panelChatButtons);
-
-		panelChatClient.add(panelText, BorderLayout.SOUTH);
-		String count1 = String.valueOf(counter1);
-		String count2 = String.valueOf(counter2);
-		jbSend.setActionCommand(count1);
-		jbFile.setActionCommand(count2);
-		
-		wordSender = "";
-
-		jbSend.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				clienteControl.sendMessage(jtxtChatTextSender.getText(), indexJList);
-				wordSender = jlChat.getText();
-				wordSender += "You: " + jtxtChatTextSender.getText() + "<br>";
-				System.out.println(wordSender);
-				jlChat.setText("<html>" + wordSender + "</html>");
-				
-//				for (int i = 0; i < listaBtnTexts.size(); i++) {
-//					String teste = String.valueOf(i);
-//					if(jbSend.getActionCommand().equalsIgnoreCase(teste)) {
-//						clienteControl.sendMessage(jtxtChatTextSender.getText(), indexJList, i );
-						
-//						wordSender = listaLabelChats.get(i).getText();
-//						System.out.println(newWord);
-//						wordSender += "You: " + listaJtxtFields.get(i).getText() + "<br>";
-//						listaLabelChats.get(i).setText("<html>" + wordSender + "</html>");
-//						listaPanel.get(i).add(listaLabelChats.get(i), BorderLayout.CENTER);
-//						String old = listaStringWords.get(i);
-//						listaStringWords.get(i).replace(listaStringWords.get(i), wordSender);
-//						System.out.println("achou " + jbSend.getActionCommand());
-	//					System.out.println(listaStringWords.get(i).toString());
-	//					wordSender = "";
-//					}
-//				}
-			}
-		});
-
-		jbFile.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				file.setFileSelectionMode(JFileChooser.FILES_ONLY);
-				// String path = file.setFileSelectionMode(FileSystemView.getFileSystemView());
-
-				// clienteControl.sendFile();
-
-			}
-		});
-		frameChat.add(panelChatClient);
-		counter1++;
-		counter2++;
-	}
-
-	public void chatFeed(int index, String res) {
-//		wordSender += "Contact: " + res + "<br>";
-//		listaLabelChats.get(index).setText("<html>" + wordSender + "</html>");
-
 	}
 
 	private void panelMyAccount() {
@@ -433,14 +283,6 @@ public class ClientScreen extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				clienteControl.register(jtxtName.getText(), jtxtEmailAccount.getText(), jtxtBirth.getText(),
 						jtxtPasswordAccount.getText());
-//				optionPane.showMessageDialog(null, s);
-//				if (s.equalsIgnoreCase("stored") || s.equalsIgnoreCase("actualized")) {
-//					jtxtEmailAccount.setEnabled(false);
-//					jtxtPasswordAccount.setEnabled(false);
-//					jtxtEmailAccount.setVisible(false);
-//					jtxtPasswordAccount.setVisible(false);
-//					enablePanel(0);
-//				}
 			}
 		});
 
@@ -468,28 +310,21 @@ public class ClientScreen extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				clienteControl.validatePass(jtxtValidatePass.getText());
-//				if (res) {
-//					optionPane.showMessageDialog(null, "Granted");
-//					enablePanel(1);
-//				} else {
-//					optionPane.showMessageDialog(null, "Validation failed");
-//				}
 			}
 		});
 	}
-	
+
 	public void setValidate(boolean b) {
 		if (b) {
-			optionPane.showMessageDialog(null, "Granted");
+			JOptionPane.showMessageDialog(null, "Granted");
 			enablePanel(1);
 		} else {
-			optionPane.showMessageDialog(null, "Validation failed");
+			JOptionPane.showMessageDialog(null, "Validation failed");
 		}
-
 	}
-	
+
 	public void setRegister(String res) {
-		optionPane.showMessageDialog(null, res);
+		JOptionPane.showMessageDialog(null, res);
 		if (res.equalsIgnoreCase("stored") || res.equalsIgnoreCase("actualized")) {
 			jtxtEmailAccount.setEnabled(false);
 			jtxtPasswordAccount.setEnabled(false);
@@ -534,32 +369,25 @@ public class ClientScreen extends JFrame {
 		jbLogin.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-//				List<String> lista = null;
 				clienteControl.login(jtxtEmailLogin.getText(), jtxtPassword.getText());
-//				if (lista != null) {
-//					optionPane.showMessageDialog(null, "Welcome");
-//					for (int i = 0; i < lista.size(); i++) {
-//						model.add(i, i + ") " + lista.get(i));
-//					}
-//				}
 			}
 		});
 	}
-	
+
 	public void setListContact(List lista, int opt, List<String> dados) {
 		List<String> list;
 		list = lista;
-		if(opt == 1) {
-			optionPane.showMessageDialog(null, "Welcome");
+		if (opt == 1) {
+			JOptionPane.showMessageDialog(null, "Welcome");
 			jtxtName.setText(dados.get(0));
 			jtxtEmailAccount.setText(dados.get(1));
 			jtxtBirth.setText(dados.get(2));
 			jtxtPasswordAccount.setText(dados.get(3));
 			enablePanel(0);
-		}else if(opt ==2) {
-			optionPane.showMessageDialog(null, "removed");
-		}else if(opt ==3) {
-			optionPane.showMessageDialog(null, "added");
+		} else if (opt == 2) {
+			JOptionPane.showMessageDialog(null, "removed");
+		} else if (opt == 3) {
+			JOptionPane.showMessageDialog(null, "added");
 		}
 		if (list != null) {
 			model.clear();
@@ -572,5 +400,6 @@ public class ClientScreen extends JFrame {
 	public void actualizeJList(int index, String contato) {
 		model.add(index, index + ") " + contato);
 	}
+
 
 }

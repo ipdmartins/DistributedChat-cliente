@@ -49,7 +49,9 @@ public class ClienteControl {
 	private List<Observador> observadores;
 	private ConnectionManager connectionManager;
 	private ClientScreen screen;
-	private HashMap<String, Integer> modelChatMap;
+	private List<String> listaIps;
+	private List<Integer> listaIndex;
+	private int listachatManagerIndex;
 
 	private static ClienteControl instance;
 
@@ -65,7 +67,9 @@ public class ClienteControl {
 		this.serverPort = 56005;
 		this.serverIP = "192.168.2.171";
 		this.listStreams = new ArrayList<StreamClient>();
-		this.modelChatMap = new HashMap<String, Integer>();
+		this.listaIps = new ArrayList<String>();
+		this.listaIndex = new ArrayList<Integer>();
+		this.listachatManagerIndex = 0;
 	}
 
 	public synchronized static ClienteControl getInstance() {
@@ -229,10 +233,13 @@ public class ClienteControl {
 	}
 
 	public String startChat(int index) {
+		if (cliente.getMyContacts().get(index).getStatus().equalsIgnoreCase("OFFLINE")) {
+			return "OFFLINE";
+		}
 		return cliente.getMyContacts().get(index).getNome();
 	}
-
-	public void sendMessage(String message, int index) {
+								///contatoSelecionado, listachatManagerIndex
+	public void sendMessage(String message, int index, int indexLista) {
 		String ip = cliente.getMyContacts().get(index).getIpCliente();
 		int porta = cliente.getMyContacts().get(index).getPortaCliente();
 		System.out.println("ip: " + ip + " porta: " + porta);
@@ -242,9 +249,18 @@ public class ClienteControl {
 			if (socketContato != null) {
 				StreamClient streamContact = new StreamClient();
 				streamContact.createStream(socketContato);
+				streamContact.sendMessage("A");
 				streamContact.sendMessage(message);
-				System.out.println("DEU BOA A MSG");
-//				modelChatMap.put(ip, indexListaLabelChat);
+				boolean cond = false;
+				for (int i = 0; i < listaIps.size(); i++) {
+					if(listaIps.get(i).equalsIgnoreCase(ip)) {
+						cond = true;
+					}
+				}
+				if(!cond) {
+					listaIps.add(ip);
+					listaIndex.add(listachatManagerIndex);
+				}
 				streamContact.closeStream();
 				socketContato.close();
 			} else {
@@ -262,18 +278,48 @@ public class ClienteControl {
 			ip = ip.replace("/", "");
 		}
 		System.out.println("ip aqui: " + ip);
-		if (modelChatMap.containsValue(ip)) {
-			// DEVE RETORNAR O INTEGER DO HASHMAP
-			this.screen.chatFeed(modelChatMap.get(ip), res);
-			System.out.println("valor int do hashmap " + modelChatMap.get(ip));
-		} else {
+		boolean cond = true;
+		for (int i = 0; i < listaIps.size(); i++) {
+			if (listaIps.get(i).equalsIgnoreCase(ip)) {
+				System.out.println("valor int do hashmap " + listaIps.get(i));
+				cond = false;
+				this.screen.chatFeed(listaIndex.get(i), res, 1, "");
+			}
+		}
+		if (cond) {
 			for (int i = 0; i < cliente.getMyContacts().size(); i++) {
 				if (cliente.getMyContacts().get(i).getIpCliente().equalsIgnoreCase(ip)) {
-					this.screen.panelChat(cliente.getMyContacts().get(i).getNome(), i, res);
+					this.screen.chatFeed(i, res, 2, cliente.getMyContacts().get(i).getNome());
+					listaIps.add(ip);
+					listaIndex.add(listachatManagerIndex);
 					break;
 				}
 			}
 		}
+	}
+
+	public void sendFile(String path, int index) {
+		String ip = cliente.getMyContacts().get(index).getIpCliente();
+		int porta = cliente.getMyContacts().get(index).getPortaCliente();
+
+		try {
+			Socket socketContato = new Socket(ip, porta);
+			if (socketContato != null) {
+				StreamClient streamContact = new StreamClient();
+				streamContact.createStream(socketContato);
+				streamContact.sendMessage("B");
+				streamContact.sendMessage(path);
+				FileManager file = new FileManager(socketContato, path);
+				file.start();
+				streamContact.closeStream();
+				socketContato.close();
+			} else {
+				System.err.println("ERRO CONEXÃO sendMessage() AO CLIENTE ");
+			}
+		} catch (IOException e) {
+			System.err.println("ERRO NO CLIENTE sendMessage() AO CLIENTE " + e);
+		}
+
 	}
 
 	public List listManager(int option, String message) {
@@ -350,11 +396,6 @@ public class ClienteControl {
 //		return this.answer;
 	}
 
-//	public void String sendFile(File file) {
-//		// para outro cliente
-//		return "";
-//	}
-
 	public void notificarMudancaTabuleiro() {
 		for (Observador obs : observadores) {
 			obs.mudouTabuleiro();
@@ -376,5 +417,15 @@ public class ClienteControl {
 	public void setScreen(ClientScreen screen) {
 		this.screen = screen;
 	}
+
+	public int getListachatManagerIndex() {
+		return listachatManagerIndex;
+	}
+
+	public void setListachatManagerIndex(int listachatManagerIndex) {
+		this.listachatManagerIndex = listachatManagerIndex;
+	}
+	
+	
 
 }
